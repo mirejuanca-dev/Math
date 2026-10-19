@@ -21,6 +21,10 @@ h1{margin:.2em 0;font-size:1.8rem}
 button{font:inherit;color:inherit;border:0;border-radius:16px;padding:14px 16px;background:#ffffff26;cursor:pointer}
 button:active{transform:scale(.97)}
 button:disabled{opacity:.5}
+details{background:var(--card);border-radius:16px;padding:12px 16px;margin:10px 0}
+summary{font-weight:700;cursor:pointer;font-size:1.05rem}
+details p,details li{line-height:1.5}
+details ul,details ol{padding-left:1.2em;margin:.5em 0}
 #rect{background:#0003;border-radius:14px;padding:8px;margin:12px 0}
 #mesa{display:flex;gap:8px;margin:12px 0}
 .col{flex:1;background:#0003;border-radius:14px;padding:8px;min-height:160px;text-align:center}
@@ -186,6 +190,50 @@ ${nw.map(p=>`<p style="font-size:1.4rem">${p[0]} ¡Has llegado a ${p[1]}!</p>`).
 <div class="row"><button class="big" style="flex:1" onclick="start('${G.sk}')">Otra ronda</button><button style="flex:1" onclick="home()">Inicio</button></div>`}
 
 /* ---------- Pantallas ---------- */
+function help(){app.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><h1>❓ Ayuda</h1><button onclick="home()">Volver</button></div>
+<h2>Para los peques</h2>
+<details open><summary>🚀 Cómo se juega</summary><ol>
+<li>En el inicio, elige la <b>Misión mixta</b> (un poco de todo) o una habilidad concreta.</li>
+<li>Cada ronda tiene <b>10 ejercicios</b>. Lee con calma y toca la respuesta que creas correcta.</li>
+<li>Si aciertas, ganas una ⭐. Con las estrellas llegas a nuevos planetas: 🌙 Luna, 🔴 Marte, 🟠 Júpiter, 🪐 Saturno y 🔵 Neptuno.</li>
+<li>Al terminar la ronda ves cuántos has acertado. Si aciertas 8 o más, ¡bonus de 3 estrellas!</li></ol></details>
+<details><summary>🎯 Las habilidades</summary><ul>
+<li>➕ <b>Sumas y restas</b>: con y sin llevadas.</li>
+<li>✖️ <b>Tablas</b> de multiplicar.</li>
+<li>➗ <b>División</b>: repartir en partes iguales.</li>
+<li>🔢 <b>Valor de las cifras</b>: unidades, decenas, centenas y millares.</li>
+<li>🍕 <b>Fracciones</b>: qué parte del círculo está coloreada.</li>
+<li>🧱 <b>Bloques</b>: formar números y hacer sumas y restas con bloques.</li>
+<li>🐸 <b>Saltos</b>: sumar y restar dando saltos en una recta numérica.</li>
+<li>📖 <b>Problemas</b>: pequeñas historias con números.</li>
+<li>💶 <b>Dinero</b>: calcular cuánto te devuelven.</li>
+<li>🕒 <b>El reloj</b>: leer la hora.</li></ul></details>
+<details><summary>🧱 Cómo usar los bloques</summary><ul>
+<li>El cuadrito azul vale <b>1</b>, la barra amarilla vale <b>10</b> y la placa roja vale <b>100</b>.</li>
+<li>Toca los botones <b>+ unidad</b>, <b>+ decena</b> (o <b>+ centena</b>) para añadir bloques. Toca un bloque para quitarlo.</li>
+<li>Cuando tengas 10 bloques iguales, usa el botón de cambio, por ejemplo <b>10 unidades → 1 decena</b>. Si necesitas quitar más de los que tienes, haz el cambio contrario: <b>1 decena → 10 unidades</b>.</li>
+<li>Cuando creas que está listo, pulsa <b>Comprobar</b>.</li></ul></details>
+<details><summary>🐸 Cómo usar los saltos</summary><ul>
+<li>Empiezas en un número. Los botones <b>+ 10</b> y <b>+ 1</b> te hacen saltar hacia delante; <b>− 10</b> y <b>− 1</b>, hacia atrás. En los niveles más altos también hay saltos de 100.</li>
+<li>Un consejo: haz primero los saltos grandes y después los pequeños.</li>
+<li>Si te equivocas de salto, pulsa <b>↩ Deshacer</b>. Cuando llegues, pulsa <b>Comprobar</b>.</li></ul></details>
+<details><summary>🤔 ¿Y si me equivoco?</summary><p>No pasa nada: equivocarse es parte de aprender. Verás una pista 💡 y la respuesta correcta, y pulsas <b>Continuar</b> cuando la hayas leído. Ese ejercicio volverá a aparecer más adelante, con el aviso "(repaso)", para practicarlo otra vez.</p></details>
+<details><summary>📈 Niveles</summary><p>Cada habilidad tiene 5 niveles. Subes de nivel cuando aciertas 3 seguidos a la primera. Si fallas 2 seguidos, bajas uno, para que siempre tengas un reto adecuado.</p></details>
+<h2>Para adultos</h2>
+<details><summary>👨‍👩‍👧 Zona de adultos</summary><ul>
+<li>Se abre desde el inicio resolviendo una cuenta sencilla. Es una barrera suave para que los peques no entren sin querer.</li>
+<li>Muestra el <b>nivel</b> y el <b>porcentaje de aciertos</b> de cada habilidad, las estrellas y los ejercicios pendientes de repaso.</li>
+<li><b>Modo práctica</b>: si lo activas, el niño no puede pasar al siguiente ejercicio hasta acertar. Un ejercicio acertado después de un fallo no da estrella.</li>
+<li><b>Borrar progreso</b> elimina niveles, estrellas y repasos. Pide confirmación.</li></ul></details>
+<details><summary>💾 Dónde se guarda el progreso</summary><p>Solo en este dispositivo y este navegador, sin cuentas ni servidor. Dos niños que usen el mismo dispositivo compartirán el progreso, y si se borran los datos del navegador, se pierde.</p></details>
+<details><summary>📲 Instalar y actualizar</summary><ul>
+<li>En el iPad, abre la dirección en Safari, pulsa Compartir y elige <b>Añadir a pantalla de inicio</b>.</li>
+<li>Tras una actualización de la app, puede que haga falta abrirla dos veces para ver la versión nueva.</li>
+<li>Si no oyes los sonidos, comprueba el volumen del dispositivo.</li></ul></details>
+<details><summary>💡 Consejos</summary><ul>
+<li>Sesiones cortas: una o dos rondas (unos 10-15 minutos) funcionan mejor que una sesión larga.</li>
+<li>Acompaña las primeras veces y deja que el niño explique cómo ha pensado la respuesta.</li>
+<li>Si un nivel le resulta muy fácil o muy difícil, la app lo ajusta sola, pero puedes elegir una habilidad concreta para reforzarla.</li></ul></details>`}
 function home(){const st=S.stars,got=PL.filter(p=>st>=p[2]),nx=PL.find(p=>st<p[2]),prev=got.length?got[got.length-1][2]:0,pct=nx?Math.round((st-prev)/(nx[2]-prev)*100):100;
  app.innerHTML=`<h1>🚀 Cosmonúmeros</h1>
 <div class="card"><div>⭐ <b>${st}</b> estrellas. ${nx?`Próximo destino: ${nx[0]} ${nx[1]} (${nx[2]} ⭐)`:'¡Has recorrido todo el sistema!'}</div>
@@ -193,7 +241,7 @@ function home(){const st=S.stars,got=PL.filter(p=>st>=p[2]),nx=PL.find(p=>st<p[2
 <div class="planets">${PL.map(p=>`<span class="${st>=p[2]?'':'off'}" title="${p[1]}">${p[0]}</span>`).join('')}</div></div>
 <button class="big" style="width:100%" onclick="start('mix')">🎲 Misión mixta</button>
 <div class="row" style="margin-top:12px">${Object.keys(SK).map(k=>`<button class="skill" onclick="start('${k}')">${SK[k].i} <b>${SK[k].n}</b><small>Nivel ${S.skills[k].lvl} de 5</small></button>`).join('')}</div>
-<p style="text-align:center"><button onclick="parents()">Zona de adultos</button></p>`}
+<p style="text-align:center"><button onclick="help()">❓ Ayuda</button> <button onclick="parents()">Zona de adultos</button></p>`}
 function parents(){if(prompt('Zona de adultos. Resuelve: 14 × 6 =')!=='84')return;
  app.innerHTML=`<h1>Progreso</h1><div class="card"><table><tr><th>Habilidad</th><th>Nivel</th><th>Aciertos</th></tr>
 ${Object.keys(SK).map(k=>{const s=S.skills[k];return`<tr><td>${SK[k].i} ${SK[k].n}</td><td>${s.lvl}/5</td><td>${s.tot?Math.round(s.ok/s.tot*100)+'% ('+s.ok+'/'+s.tot+')':'—'}</td></tr>`}).join('')}</table>
