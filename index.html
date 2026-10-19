@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b1446">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cosmonúmeros">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Cosmonúmeros</title>
+<style>
+:root{--bg1:#1b1446;--bg2:#3a1c71;--card:#ffffff1a;--acc:#ffd23f;--ok:#37d67a;--bad:#ff6b6b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#app{max-width:640px;margin:0 auto;padding:16px}
+h1{margin:.2em 0;font-size:1.8rem}
+.card{background:var(--card);border-radius:20px;padding:16px;margin:12px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;color:inherit;border:0;border-radius:16px;padding:14px 16px;background:#ffffff26;cursor:pointer}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.5}
+#rect{background:#0003;border-radius:14px;padding:8px;margin:12px 0}
+#mesa{display:flex;gap:8px;margin:12px 0}
+.col{flex:1;background:#0003;border-radius:14px;padding:8px;min-height:160px;text-align:center}
+.blks{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:flex-end;min-height:120px}
+.b{display:block;border-radius:4px;cursor:pointer}
+.b.u{width:24px;height:24px;background:#4cc9f0}
+.b.t{width:24px;height:112px;background:repeating-linear-gradient(#ffd23f 0 10px,#c99a00 10px 11px)}
+.b.h{width:64px;height:64px;background:#ff5d8f;border:3px solid #c9184a}
+button:focus-visible{outline:3px solid var(--acc)}
+.big{background:var(--acc);color:#2a1a00;font-weight:700;font-size:1.1rem}
+.skill{flex:1 1 45%;text-align:left;min-height:84px}
+.skill small{display:block;opacity:.8}
+.q{font-size:2.2rem;text-align:center;margin:16px 0 4px;font-weight:700}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opts button{font-size:1.6rem;padding:20px}
+.ok{background:var(--ok)!important;color:#04290f}.bad{background:var(--bad)!important}
+.bar{height:14px;background:#0004;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+.planets{font-size:2rem;display:flex;gap:10px;justify-content:center}.off{filter:grayscale(1);opacity:.3}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;text-align:left}
+</style></head><body><div id="app"></div>
+<script>
+const app=document.getElementById('app');
+const SK={add:{n:'Sumas y restas',i:'➕'},tab:{n:'Tablas',i:'✖️'},pos:{n:'Valor de las cifras',i:'🔢'},fra:{n:'Fracciones',i:'🍕'},blk:{n:'Bloques',i:'🧱'},sal:{n:'Saltos',i:'🐸'},pro:{n:'Problemas',i:'📖'},div:{n:'División',i:'➗'},mon:{n:'Dinero',i:'💶'},clk:{n:'El reloj',i:'🕒'}};
+const PL=[['🌙','Luna',10],['🔴','Marte',30],['🟠','Júpiter',60],['🪐','Saturno',100],['🔵','Neptuno',150]];
+const KEY='cosmonumeros_v1';
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[R(0,a.length-1)];
+const sh=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+let S=load(),G=null;
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.skills){for(const x in SK)if(!s.skills[x])s.skills[x]={lvl:1,streak:0,miss:0,ok:0,tot:0};return s}}catch(e){}
+ const k={};for(const x in SK)k[x]={lvl:1,streak:0,miss:0,ok:0,tot:0};return{skills:k,stars:0,rep:[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let AC;function beep(f){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.15)}catch(e){}}
+
+/* ---------- Generadores de ejercicios (uno por habilidad) ---------- */
+function numOpts(a){const s=new Set([a]);for(const v of sh([a+1,a-1,a+10,a-10,a+2,a-2,a+R(3,9)]))if(v>=0&&s.size<4)s.add(v);let i=3;while(s.size<4)s.add(a+i++);return sh([...s].map(String))}
+const parts=n=>String(n).split('').reverse().map((x,i)=>x*10**i).filter(x=>x>0).reverse();
+function stepH(a,b,p){let c=a;const t=[a];for(const x of parts(b)){c+=p?x:-x;t.push(c)}return `Ve por partes (${p?'sumando':'restando'} ${parts(b).join(', ')}): ${t.slice(0,-1).join(' → ')} → ?`}
+function gAdd(l){const p=Math.random()<.5;let a,b;
+ if(l==1){a=R(3,19);b=R(1,9);if(!p&&b>a)[a,b]=[b,a]}
+ else if(l==2){const au=R(0,9),at=R(2,8);a=at*10+au;b=p?R(1,9-at)*10+R(0,9-au):R(1,at)*10+R(0,au)}
+ else if(l==3){if(p){const au=R(2,9);a=R(1,8)*10+au;b=R(1,8)*10+R(10-au,9)}else{const au=R(0,8),at=R(3,9);a=at*10+au;b=R(1,at-1)*10+R(au+1,9)}}
+ else{const[lo,hi]=l==4?[100,999]:[1000,9999];a=R(lo,hi);b=R(lo,hi);if(!p&&b>a)[a,b]=[b,a]}
+ const r=p?a+b:a-b;return{t:`${a} ${p?'+':'−'} ${b} = ?`,a:String(r),o:numOpts(r),h:stepH(a,b,p)}}
+function gTab(l){const a=pick({1:[2,5,10],2:[3,4],3:[6,7],4:[8,9],5:[2,3,4,5,6,7,8,9,10]}[l]),b=R(1,10);
+ if(l==5&&Math.random()<.5)return{t:`${a} × ? = ${a*b}`,a:String(b),o:numOpts(b),h:`Cuenta de ${a} en ${a}: ${a}, ${a*2}, ${a*3}... hasta llegar a ${a*b}.`};
+ return{t:`${a} × ${b} = ?`,a:String(a*b),o:numOpts(a*b),h:`${a} × ${b} es ${b} veces ${a}: ${Array(b).fill(a).join(' + ')}.`}}
+const NM=['unidades','decenas','centenas','millares'];
+const dig=c=>{const s=new Set([c]);while(s.size<4)s.add(String(R(0,9)));return sh([...s])};
+function gPos(l){const d=l<=2?2:l<=4?3:4,ty=l==1?0:R(0,2),n=R(10**(d-1),10**d-1),ds=String(n).split('').reverse();
+ if(ty==0){const i=R(0,d-1);return{t:`¿Qué cifra está en las ${NM[i]} de ${n}?`,a:ds[i],o:dig(ds[i]),h:'Lee el número de derecha a izquierda: unidades, decenas, centenas y millares.'}}
+ if(ty==1){const t=ds.map((x,i)=>x*10**i).filter(x=>x>0).reverse().join(' + ');return{t:`${t} = ?`,a:String(n),o:numOpts(n),h:'Junta las centenas, las decenas y las unidades.'}}
+ let m;do{m=R(10**(d-1),10**d-1)}while(m==n);
+ return{t:'¿Cuál es el número mayor?',a:String(Math.max(n,m)),o:sh([String(n),String(m)]),h:'Compara primero las cifras de más a la izquierda.'}}
+function pie(n,k){const r=50,c=60;let s='<svg viewBox="0 0 120 120" width="150" role="img" aria-label="Círculo dividido en partes">';
+ for(let i=0;i<n;i++){const a0=2*Math.PI*i/n-Math.PI/2,a1=2*Math.PI*(i+1)/n-Math.PI/2;
+ s+=`<path d="M${c} ${c}L${c+r*Math.cos(a0)} ${c+r*Math.sin(a0)}A${r} ${r} 0 0 1 ${c+r*Math.cos(a1)} ${c+r*Math.sin(a1)}Z" fill="${i<k?'#ffd23f':'#ffffff22'}" stroke="#fff" stroke-width="2"/>`}
+ return s+'</svg>'}
+function gFra(l){const n=pick([[2,4],[2,3,4],[2,3,4,5,6],[2,3,4,5,6,8],[3,4,5,6,7,8,10]][l-1]),k=R(1,n-1),s=new Set([k+'/'+n]);
+ while(s.size<4){const d=pick([n,n,n+1,n-1,n*2].filter(x=>x>1));s.add(R(1,d-1)+'/'+d)}
+ return{t:'¿Qué fracción está coloreada?',v:pie(n,k),a:k+'/'+n,o:sh([...s]),h:`Abajo va el total de partes iguales (${n}); arriba, las partes coloreadas. Cuéntalas.`}}
+function gDiv(l){const d=pick({1:[2,5,10],2:[3,4],3:[6,7],4:[8,9],5:[2,3,4,5,6,7,8,9,10]}[l]),q=R(1,10);
+ return{t:`${d*q} ÷ ${d} = ?`,a:String(q),o:numOpts(q),h:`Piensa en la tabla del ${d}: ¿qué número multiplicado por ${d} da ${d*q}?`}}
+const fmt=c=>c%100==0?`${c/100} €`:`${(c/100).toFixed(2).replace('.',',')} €`;
+function gMon(l){let pr,pay,t;
+ if(l<=2){pr=R(1,l==1?9:19)*100;pay=l==1?1000:2000}
+ else if(l==3){pr=R(1,19)*50;pay=pick([1000,2000])}
+ else{pay=pick([500,1000,2000]);pr=R(10,190)*5;if(pr>=pay)pr=pay-5*R(1,40)}
+ if(l==5){const a=R(20,150)*5,b=R(20,150)*5;pr=a+b;pay=2000;t=`Compras algo de ${fmt(a)} y algo de ${fmt(b)}. Pagas con ${fmt(pay)}. ¿Cuánto te devuelven?`}
+ else t=`Algo cuesta ${fmt(pr)}. Pagas con ${fmt(pay)}. ¿Cuánto te devuelven?`;
+ const c=pay-pr,o=new Set([c]);for(const v of sh(l<3?[c+100,c-100,c+200,c-200,c+300]:[c+100,c-100,c+50,c-50,c+10,c-10,c+200]))if(v>0&&o.size<4)o.add(v);let i=1;while(o.size<4)o.add(c+i++*5);
+ return{t,a:fmt(c),o:sh([...o].map(fmt)),h:`Lo que te devuelven es lo que pagas menos lo que cuesta: ${fmt(pay)} − ${fmt(pr)}.`}}
+function clk(h,m){let s='<svg viewBox="0 0 120 120" width="150" role="img" aria-label="Reloj analógico"><circle cx="60" cy="60" r="56" fill="#fff" stroke="#ffd23f" stroke-width="4"/>';
+ for(let i=1;i<=12;i++){const a=i*Math.PI/6;s+=`<text x="${60+44*Math.sin(a)}" y="${64-44*Math.cos(a)}" font-size="11" text-anchor="middle" fill="#1b1446" font-weight="700">${i}</text>`}
+ const hand=(d,len,w,c)=>{const a=d*Math.PI/180;return`<line x1="60" y1="60" x2="${60+len*Math.sin(a)}" y2="${60-len*Math.cos(a)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`};
+ return s+hand(((h%12)+m/60)*30,28,5,'#1b1446')+hand(m*6,42,3,'#ff6b6b')+'<circle cx="60" cy="60" r="3" fill="#1b1446"/></svg>'}
+const hm=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
+function gClk(l){const h=R(1,12),m=l==1?0:l==2?pick([0,30]):l==3?pick([0,15,30,45]):pick([0,5,10,15,20,25,30,35,40,45,50,55]),a=hm(h,m),s=new Set([a]);
+ if(l>=4&&m>=5&&m<=55&&Math.random()<.6)s.add(hm(m/5,h*5%60));
+ for(const[x,y]of sh([[h%12+1,m],[(h+10)%12+1,m],[h,(m+30)%60],[h,(m+15)%60],[h,(m+5)%60]]))if(s.size<4)s.add(hm(x,y));
+ return{t:'¿Qué hora marca el reloj?',v:clk(h,m),a,o:sh([...s]),h:'La aguja corta marca la hora y la larga (roja) los minutos. Cada número del reloj vale 5 minutos.'}}
+function gBlk(l){const sp=n=>({h:Math.floor(n/100),t:Math.floor(n/10)%10,u:n%10});let a,b;
+ if(l<=2){const n=l==1?R(3,19):R(20,99);return{t:`Forma el número ${n} con bloques.`,a:String(n),o:[],blk:{s:sp(0),p:2},h:'Cada barra amarilla vale 10 y cada cuadrito azul vale 1.'}}
+ if(l==3){const au=R(4,9);a=R(1,6)*10+au;b=R(1,3)*10+R(10-au,9);return{t:`Tienes ${a}. Añade ${b} y forma el resultado.`,a:String(a+b),o:[],blk:{s:sp(a),p:2},h:'Cuando juntes 10 cuadritos, cámbialos por 1 barra de 10.'}}
+ if(l==4){const au=R(0,8),at=R(3,9);a=at*10+au;b=R(1,at-1)*10+R(au+1,9);return{t:`Tienes ${a}. Quita ${b} y forma lo que queda.`,a:String(a-b),o:[],blk:{s:sp(a),p:2},h:'Si faltan cuadritos para quitar, cambia una barra de 10 por 10 cuadritos.'}}
+ const add=Math.random()<.5;if(add){a=R(100,499);b=R(100,499)}else{a=R(300,999);b=R(100,a-100)}
+ return{t:add?`Tienes ${a}. Añade ${b} y forma el resultado.`:`Tienes ${a}. Quita ${b} y forma lo que queda.`,a:String(add?a+b:a-b),o:[],blk:{s:sp(a),p:3},h:'Una placa roja vale 100, una barra amarilla 10 y un cuadrito azul 1. Cambia 10 bloques iguales por 1 del siguiente tamaño.'}}
+function gJmp(l){const add=l==1?true:l==2?false:Math.random()<.5;let a,b;
+ if(l<=2){a=add?R(5,40):R(40,99);b=R(11,29)}
+ else if(l==3){a=add?R(20,60):R(50,99);b=R(20,49)}
+ else if(l==4){a=add?R(100,600):R(300,900);b=R(101,250)}
+ else{a=add?R(100,500):R(500,999);b=R(101,450)}
+ return{t:`Empieza en ${a}. ${add?'Suma':'Resta'} ${b} con saltos. ¿Dónde llegas?`,a:String(add?a+b:a-b),o:[],jmp:{s:a,big:l>=4},h:`Descompón ${b}: ${parts(b).join(' + ')}. Usa los saltos grandes primero y luego los pequeños.`}}
+const NMS=['Marta','Pablo','Lucía','Hugo','Irene','Álex'],OBJ=[['pegatinas','Cuántas'],['canicas','Cuántas'],['cromos','Cuántos'],['lápices','Cuántos'],['galletas','Cuántas'],['globos','Cuántos'],['libros','Cuántos'],['manzanas','Cuántas']];
+function gPro(l){const nm=pick(NMS),[n,c]=pick(OBJ),ty=l<=2?pick(['j','q']):l==3?pick(['m','m','j','q']):l==4?pick(['d','c','m']):pick(['2','d','c','2']);let t,r,h,a,b;
+ if(ty=='j'){[a,b]=l==1?[R(3,12),R(2,8)]:[R(21,59),R(12,38)];t=`${nm} tiene ${a} ${n} y le regalan ${b} más. ¿${c} tiene ahora?`;r=a+b;h='Se juntan dos cantidades: ¿sumas o restas?'}
+ else if(ty=='q'){[a,b]=l==1?[R(8,18),R(2,7)]:[R(40,99),R(11,35)];t=`${nm} tenía ${a} ${n} y regaló ${b}. ¿${c} le quedan?`;r=a-b;h='Se quitan algunas: ¿sumas o restas?'}
+ else if(ty=='m'){a=R(2,l==4?9:6);b=R(2,6);t=`En cada caja hay ${a} ${n}. ¿${c} ${n} hay en ${b} cajas?`;r=a*b;h=`Hay ${b} grupos iguales de ${a}: piensa en una multiplicación.`}
+ else if(ty=='d'){a=R(2,9);b=R(2,6);t=`${nm} reparte ${a*b} ${n} entre ${b} amigos por igual. ¿${c} recibe cada amigo?`;r=a;h='Repartir en partes iguales es dividir.'}
+ else if(ty=='c'){a=R(30,80);b=R(5,25);const mas=Math.random()<.5;t=`${nm} tiene ${a} ${n}. Su hermano tiene ${b} ${mas?'más':'menos'}. ¿${c} tiene su hermano?`;r=mas?a+b:a-b;h=`Si tiene ${mas?'más':'menos'}, la cantidad ${mas?'crece':'baja'}: ¿qué operación usas?`}
+ else{a=R(3,6);b=R(2,5);const d=R(1,a*b-1);t=`Un paquete trae ${a} ${n}. ${nm} compra ${b} paquetes y regala ${d}. ¿${c} le quedan?`;r=a*b-d;h=`Primero calcula cuántas hay en total (${b} paquetes de ${a}); después quita las que regala.`}
+ return{t,a:String(r),o:numOpts(r),h}}
+const GEN={blk:gBlk,sal:gJmp,pro:gPro,add:gAdd,tab:gTab,pos:gPos,fra:gFra,div:gDiv,mon:gMon,clk:gClk};
+
+/* ---------- Partida ---------- */
+function newQ(){const sk=G.sk=='mix'?pick(Object.keys(SK)):G.sk;
+ if(G.i-G.lastRep>=3&&S.rep.length&&(Math.random()<.5||G.i>=G.N-3)){
+  const ix=S.rep.findIndex(r=>G.sk=='mix'||r.sk==G.sk);
+  if(ix>=0){const r=S.rep.splice(ix,1)[0];G.lastRep=G.i;return{...r.q,o:sh(r.q.o),sk:r.sk,rep:1}}}
+ return{...GEN[sk](S.skills[sk].lvl),sk}}
+function start(sk){G={sk,i:0,ok:0,N:10,lock:false,err:0,lastRep:-9,up:[]};G.q=newQ();game()}
+function game(){const q=G.q;app.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><button onclick="home()" aria-label="Salir">✕</button><b>${G.i+1} / ${G.N}</b><b>⭐ ${S.stars}</b></div>
+<div class="bar" style="margin:10px 0"><i style="width:${G.i*10}%"></i></div>
+<div class="card"><div style="text-align:center;opacity:.8">${SK[q.sk].i} ${SK[q.sk].n}${q.rep?' (repaso)':''}</div>${q.v?`<div style="text-align:center">${q.v}</div>`:''}<div class="q">${q.t}</div></div>
+${q.blk?'<div id="mesa"></div><div id="pal"></div><button class="big" style="width:100%;margin-top:10px" onclick="chkBlk()">Comprobar</button>':''}${q.jmp?'<div id="rect"></div><div id="palj"></div><div class="row" style="margin-top:10px"><button onclick="undoJ()">↩ Deshacer</button><button class="big" style="flex:1" onclick="chkJmp()">Comprobar</button></div>':''}<div class="opts">${(q.o||[]).map(o=>`<button onclick="ans(this,'${o}')">${o}</button>`).join('')}</div><div id="fb"></div>`;if(q.blk){B={...q.blk.s};drawB()}if(q.jmp){J=[q.jmp.s];drawJ()}}
+function ans(b,o){if(G.lock)return;res(o===G.q.a,b)}
+function res(good,b){const q=G.q,s=S.skills[q.sk];
+ if(!G.err)s.tot++;
+ if(good){if(b)b.classList.add('ok');beep(660);G.lock=true;
+  if(!G.err){G.ok++;S.stars++;s.ok++;s.streak++;s.miss=0;if(s.streak>=3&&s.lvl<5){s.lvl++;s.streak=0;G.up.push(q.sk)}}
+  save();setTimeout(nextQ,G.err?900:700);return}
+ if(b){b.classList.add('bad');b.disabled=true}beep(220);
+ if(!G.err){G.err=1;s.streak=0;s.miss++;if(s.miss>=2&&s.lvl>1){s.lvl--;s.miss=0}
+  G.st=S.rep.length<30;if(G.st){const{sk,...c}=q;S.rep.push({sk,q:c})}}
+ save();const hint=q.h?`<p>💡 ${q.h}</p>`:'';
+ if(S.retry){document.getElementById('fb').innerHTML=`<div class="card"><b>Casi. Inténtalo otra vez.</b>${hint}</div>`;return}
+ G.lock=true;const cb=[...document.querySelectorAll('.opts button')].find(x=>x.textContent===q.a);if(cb)cb.classList.add('ok');
+ document.getElementById('fb').innerHTML=`<div class="card">La respuesta era <b>${q.a}</b>.${hint}${G.st?'<p>Lo repasaremos pronto.</p>':''}</div><button class="big" style="width:100%" onclick="nextQ()">Continuar</button>`}
+
+/* ---------- Manipulativos: bloques de valor posicional ---------- */
+let B;
+const BN={u:['unidad','unidades'],t:['decena','decenas'],h:['centena','centenas']};
+function drawB(){const P=G.q.blk.p==3?['h','t','u']:['t','u'];
+ document.getElementById('mesa').innerHTML=P.map(k=>`<div class="col"><b>${BN[k][1]}</b><div class="blks">${Array.from({length:B[k]},()=>`<i class="b ${k}" onclick="rm('${k}')"></i>`).join('')}</div><small>${B[k]}</small></div>`).join('');
+ document.getElementById('pal').innerHTML=`<div class="row">${P.map(k=>`<button onclick="addB('${k}')">+ ${BN[k][0]}</button>`).join('')}</div><div class="row" style="margin-top:8px">${P.slice(0,-1).map((k,i)=>{const n=P[i+1];return`<button onclick="agr('${n}','${k}')">10 ${BN[n][1]} → 1 ${BN[k][0]}</button><button onclick="des('${k}','${n}')">1 ${BN[k][0]} → 10 ${BN[n][1]}</button>`}).join('')}</div>`}
+function addB(k){if(G.lock||B[k]>=30)return;B[k]++;beep(520);drawB()}
+function rm(k){if(G.lock)return;B[k]--;drawB()}
+function agr(f,t){if(G.lock||B[f]<10)return;B[f]-=10;B[t]++;beep(520);drawB()}
+function des(f,t){if(G.lock||B[f]<1)return;B[f]--;B[t]+=10;drawB()}
+function chkBlk(){if(G.lock)return;const v=B.h*100+B.t*10+B.u,ok=B.u<10&&B.t<10,hit=+G.q.a===v;
+ if(hit&&!ok){document.getElementById('fb').innerHTML='<div class="card">Tienes el valor justo, pero hay 10 o más bloques iguales. ¡Cámbialos por un bloque mayor!</div>';return}
+ res(hit,null)}
+/* ---------- Manipulativo: recta numérica con saltos ---------- */
+let J;
+function drawJ(){const st=G.q.jmp.big?[100,10,1]:[10,1],lo=Math.min(...J)-3,hi=Math.max(...J)+3,y=70,X=v=>10+(v-lo)/(hi-lo)*300,L=J[J.length-1];
+ let s=`<svg viewBox="0 0 320 120" width="100%" role="img" aria-label="Recta numérica con saltos"><text x="10" y="18" font-size="16" font-weight="700" fill="#ffd23f">Estás en ${L}</text><line x1="10" y1="${y}" x2="310" y2="${y}" stroke="#fff" stroke-width="3"/>`;
+ for(let i=1;i<J.length;i++){const x0=X(J[i-1]),x1=X(J[i]),d=J[i]-J[i-1],rx=Math.abs(x1-x0)/2,ry=Math.min(rx,34);
+  s+=`<path d="M${x0} ${y}A${rx} ${ry} 0 0 1 ${x1} ${y}" fill="none" stroke="${d>0?'#37d67a':'#ff6b6b'}" stroke-width="3"/>`;
+  if(rx>=9)s+=`<text x="${(x0+x1)/2}" y="${d>0?y-ry-5:y+ry+14}" font-size="12" text-anchor="middle" fill="#fff">${d>0?'+':'−'}${Math.abs(d)}</text>`}
+ J.forEach((v,i)=>{const last=i==J.length-1;s+=`<circle cx="${X(v)}" cy="${y}" r="${last?8:4}" fill="${last?'#ffd23f':'#fff'}"/>`});
+ document.getElementById('rect').innerHTML=s+'</svg>';
+ document.getElementById('palj').innerHTML=`<div class="row">${st.map(v=>`<button onclick="jmp(${v})">+ ${v}</button>`).join('')}${st.map(v=>`<button onclick="jmp(-${v})">− ${v}</button>`).join('')}</div>`}
+function jmp(d){if(G.lock||J.length>40)return;const n=J[J.length-1]+d;if(n<0)return;J.push(n);beep(520);drawJ()}
+function undoJ(){if(G.lock||J.length<2)return;J.pop();drawJ()}
+function chkJmp(){if(G.lock)return;res(J[J.length-1]===+G.q.a,null)}
+function nextQ(){G.i++;G.err=0;if(G.i>=G.N)end();else{G.q=newQ();G.lock=false;game()}}
+function end(){const bonus=G.ok>=8?3:0;S.stars+=bonus;save();
+ const nw=PL.filter(p=>S.stars-G.ok-bonus<p[2]&&S.stars>=p[2]);
+ app.innerHTML=`<div class="card" style="text-align:center"><h1>${G.ok>=8?'🚀 ¡Despegue perfecto!':G.ok>=5?'🌟 ¡Buen vuelo!':'💪 ¡Sigue practicando!'}</h1>
+<p>Aciertos: <b>${G.ok}/${G.N}</b>. Estrellas ganadas: <b>${G.ok+bonus}</b>${bonus?' (con bonus de +3)':''}</p>
+${G.up.length?`<p>⬆️ ¡Subes de nivel en: ${[...new Set(G.up)].map(k=>SK[k].n).join(', ')}!</p>`:''}
+${nw.map(p=>`<p style="font-size:1.4rem">${p[0]} ¡Has llegado a ${p[1]}!</p>`).join('')}</div>
+<div class="row"><button class="big" style="flex:1" onclick="start('${G.sk}')">Otra ronda</button><button style="flex:1" onclick="home()">Inicio</button></div>`}
+
+/* ---------- Pantallas ---------- */
+function home(){const st=S.stars,got=PL.filter(p=>st>=p[2]),nx=PL.find(p=>st<p[2]),prev=got.length?got[got.length-1][2]:0,pct=nx?Math.round((st-prev)/(nx[2]-prev)*100):100;
+ app.innerHTML=`<h1>🚀 Cosmonúmeros</h1>
+<div class="card"><div>⭐ <b>${st}</b> estrellas. ${nx?`Próximo destino: ${nx[0]} ${nx[1]} (${nx[2]} ⭐)`:'¡Has recorrido todo el sistema!'}</div>
+<div class="bar" style="margin:10px 0"><i style="width:${pct}%"></i></div>
+<div class="planets">${PL.map(p=>`<span class="${st>=p[2]?'':'off'}" title="${p[1]}">${p[0]}</span>`).join('')}</div></div>
+<button class="big" style="width:100%" onclick="start('mix')">🎲 Misión mixta</button>
+<div class="row" style="margin-top:12px">${Object.keys(SK).map(k=>`<button class="skill" onclick="start('${k}')">${SK[k].i} <b>${SK[k].n}</b><small>Nivel ${S.skills[k].lvl} de 5</small></button>`).join('')}</div>
+<p style="text-align:center"><button onclick="parents()">Zona de adultos</button></p>`}
+function parents(){if(prompt('Zona de adultos. Resuelve: 14 × 6 =')!=='84')return;
+ app.innerHTML=`<h1>Progreso</h1><div class="card"><table><tr><th>Habilidad</th><th>Nivel</th><th>Aciertos</th></tr>
+${Object.keys(SK).map(k=>{const s=S.skills[k];return`<tr><td>${SK[k].i} ${SK[k].n}</td><td>${s.lvl}/5</td><td>${s.tot?Math.round(s.ok/s.tot*100)+'% ('+s.ok+'/'+s.tot+')':'—'}</td></tr>`}).join('')}</table>
+<p>Estrellas: ${S.stars}. Ejercicios pendientes de repaso: ${S.rep.length}.</p></div>
+<label class="card" style="display:block"><input type="checkbox" style="width:22px;height:22px;vertical-align:middle" ${S.retry?'checked':''} onchange="S.retry=this.checked;save()"> <b>Modo práctica:</b> no pasar al siguiente ejercicio hasta acertar. Con este modo, un ejercicio acertado tras un fallo no da estrella.</label>
+<div class="row"><button onclick="home()">Volver</button><button onclick="if(confirm('¿Borrar todo el progreso?')){localStorage.removeItem(KEY);S=load();home()}">Borrar progreso</button></div>`}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+home();
+</script></body></html>
